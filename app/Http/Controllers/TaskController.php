@@ -102,33 +102,45 @@ class TaskController extends Controller
 
         return response()->json(['status' => $task->status]);
     }
+public function addComment(Request $request, Task $task)
+{
+    $data = $request->validate([
+        'comment_text' => ['required', 'string', 'max:2000'],
+    ]);
 
-    public function addComment(Request $request, Task $task)
-    {
-        $data = $request->validate([
-            'comment_text' => ['required', 'string', 'max:2000'],
-        ]);
+    $user = Auth::user();
 
-        $user = Auth::user();
+    $comment = TaskComment::create([
+        'task_id' => $task->task_id,
+        'user_id' => $user->user_id,
+        'comment_text' => $data['comment_text'],
+    ]);
 
-        $comment = TaskComment::create([
-            'task_id' => $task->task_id,
-            'user_id' => $user->user_id,
-            'comment_text' => $data['comment_text'],
-        ]);
+    Activity::log(
+        'Commented on task',
+        'Task',
+        $task->task_id
+    );
 
-        Activity::log('Commented on task', 'Task', $task->task_id);
-
-        if ($task->assigned_to && $task->assigned_to !== $user->user_id) {
-            Activity::notify($task->assigned_to, $user->full_name . " commented on \"{$task->task_name}\"", 'mention');
-        }
-
-        return response()->json([
-            'user' => $user->full_name,
-            'text' => $comment->comment_text,
-            'at' => $comment->created_at->diffForHumans(),
-        ]);
+    if (
+        $task->assigned_to &&
+        $task->assigned_to !== $user->user_id
+    ) {
+        Activity::notify(
+            $task->assigned_to,
+            $user->full_name .
+                " commented on \"{$task->task_name}\"",
+            'mention'
+        );
     }
+
+    return response()->json([
+        'user' => $user->full_name,
+        'text' => $comment->comment_text,
+        'at' => optional($comment->created_at)?->diffForHumans()
+            ?? 'Just now',
+    ]);
+}
 
     public function store(Request $request)
     {

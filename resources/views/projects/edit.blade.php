@@ -61,17 +61,99 @@
         <input type="date" id="end_date" name="end_date" value="{{ old('end_date', optional($project->end_date)->format('Y-m-d')) }}">
       </div>
     </div>
-    @if ($canEditBudget)
-      <div class="form-field">
-        <label for="allocated_amount">Budget allocated (ETB)</label>
-        <input type="number" step="0.01" min="0" id="allocated_amount" name="allocated_amount" value="{{ old('allocated_amount', optional($project->budget)->allocated_amount) }}">
-      </div>
-    @else
-      <div class="field-row" style="margin-bottom:16px;">
-        <span class="k">Budget allocated</span>
-        <span class="v">ETB {{ number_format(optional($project->budget)->allocated_amount ?? 0) }} <span style="font-weight:400; color:var(--ink-faint); font-size:11.5px;">(requires the manage_budgets permission)</span></span>
-      </div>
-    @endif
+   @if ($canEditBudget)
+
+    <div
+        class="form-grid"
+        style="margin-top:4px;"
+    >
+
+        <div class="form-field">
+
+            <label for="allocated_amount">
+                Budget allocated (ETB)
+            </label>
+
+            <input
+                type="number"
+                step="0.01"
+                min="0"
+                id="allocated_amount"
+                name="allocated_amount"
+                value="{{ old(
+                    'allocated_amount',
+                    optional($project->budget)->allocated_amount ?? 0
+                ) }}"
+            >
+
+        </div>
+
+
+        <div class="form-field">
+
+            <label for="spent_amount">
+                Budget spent (ETB)
+            </label>
+
+            <input
+                type="number"
+                step="0.01"
+                min="0"
+                id="spent_amount"
+                name="spent_amount"
+                value="{{ old(
+                    'spent_amount',
+                    optional($project->budget)->spent_amount ?? 0
+                ) }}"
+            >
+
+        </div>
+
+    </div>
+
+@else
+
+    <div
+        class="field-row"
+        style="margin-bottom:16px;"
+    >
+
+        <span class="k">
+            Budget
+        </span>
+
+        <span class="v">
+
+            ETB
+            {{ number_format(
+                optional($project->budget)->allocated_amount ?? 0,
+                2
+            ) }}
+
+            allocated /
+            ETB
+            {{ number_format(
+                optional($project->budget)->spent_amount ?? 0,
+                2
+            ) }}
+
+            spent
+
+            <span
+                style="
+                    font-weight:400;
+                    color:var(--ink-faint);
+                    font-size:11.5px;
+                "
+            >
+                (requires manage_budgets permission)
+            </span>
+
+        </span>
+
+    </div>
+
+@endif
     <div style="display:flex; gap:10px; margin-top:20px; justify-content:space-between;">
       <div style="display:flex; gap:10px;">
         <button type="submit" class="btn btn-accent">Save changes</button>

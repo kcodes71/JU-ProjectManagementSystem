@@ -5,9 +5,18 @@
 
 <nav class="lp-nav" id="lpNav">
   <div class="lp-nav-brand">
-    <div class="mark">JU</div>
-    <div class="name">ICT PMS</div>
-  </div>
+
+    <img
+    src="{{ asset('images/logo.png') }}"
+    alt="Jimma University Logo"
+    class="mark"
+>
+
+    <div class="name">
+        ICT PMS
+    </div>
+
+</div>
   <div class="lp-nav-links">
     <a href="#features">Features</a>
     <a href="#workflow">Workflow</a>
@@ -425,7 +434,24 @@
   <div class="lp-footer-grid">
     <div class="lp-footer-col">
       <div class="lp-footer-brand" style="margin-bottom:14px;">
-        <div class="mark" style="width:28px;height:28px;border-radius:7px;background:linear-gradient(155deg,var(--accent),var(--accent-dark));display:flex;align-items:center;justify-content:center;font-family:'Space Grotesk';font-weight:700;color:#1B1200;font-size:11px;">JU</div>
+        <div
+    class="mark"
+    style="
+        width:28px;
+        height:28px;
+        border-radius:7px;
+        background:#0067B8;
+        color:#fff;
+        display:flex;
+        align-items:center;
+        justify-content:center;
+        font-family:'Space Grotesk';
+        font-weight:700;
+        font-size:11px;
+    "
+>
+    JU
+</div>
         <div class="name">ICT PMS</div>
       </div>
       <p>The project management system for Jimma University's ICT Directorate — projects, tasks, budgets, and teams in one place.</p>

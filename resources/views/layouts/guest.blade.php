@@ -43,7 +43,13 @@
 <body class="guest-body">
   <div class="card guest-card">
     <div class="guest-brand">
-      <div class="brand-mark">JU</div>
+      
+        <img
+    src="{{ asset('images/logo.png') }}"
+    alt="Jimma University Logo"
+    
+>
+      
       <div>
         <div class="t1">ICT PMS</div>
         <div class="t2">Jimma University</div>

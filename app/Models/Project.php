@@ -7,11 +7,18 @@ use Illuminate\Database\Eloquent\Model;
 class Project extends Model
 {
     protected $primaryKey = 'project_id';
+
     public $timestamps = false;
 
     protected $fillable = [
-        'project_name', 'description', 'project_type', 'team_id', 'template_id',
-        'scope_statement', 'start_date', 'end_date', 'status', 'created_by',
+        'project_name',
+        'description',
+        'project_type',
+        'team_id',
+        'start_date',
+        'end_date',
+        'status',
+        'created_by',
     ];
 
     protected $casts = [
@@ -19,81 +26,161 @@ class Project extends Model
         'end_date' => 'date',
     ];
 
+    /*
+    |--------------------------------------------------------------------------
+    | Relationships
+    |--------------------------------------------------------------------------
+    */
+
+    /**
+     * Team responsible for this project.
+     */
     public function team()
     {
-        return $this->belongsTo(Team::class, 'team_id', 'team_id');
+        return $this->belongsTo(
+            Team::class,
+            'team_id',
+            'team_id'
+        );
     }
 
-    public function template()
-    {
-        return $this->belongsTo(ProjectTemplate::class, 'template_id', 'template_id');
-    }
-
+    /**
+     * User who created the project.
+     */
     public function creator()
     {
-        return $this->belongsTo(User::class, 'created_by', 'user_id');
+        return $this->belongsTo(
+            User::class,
+            'created_by',
+            'user_id'
+        );
     }
 
-    public function phases()
-    {
-        return $this->hasMany(Phase::class, 'project_id', 'project_id')->orderBy('sequence_order');
-    }
-
-    public function memberRoles()
-    {
-        return $this->hasMany(ProjectMemberRole::class, 'project_id', 'project_id');
-    }
-
-    public function deliverables()
-    {
-        return $this->hasMany(ProjectDeliverable::class, 'project_id', 'project_id');
-    }
-
-    public function changeRequests()
-    {
-        return $this->hasMany(ChangeRequest::class, 'project_id', 'project_id');
-    }
-
+    /**
+     * Project budget.
+     */
     public function budget()
     {
-        return $this->hasOne(ProjectBudget::class, 'project_id', 'project_id');
+        return $this->hasOne(
+            ProjectBudget::class,
+            'project_id',
+            'project_id'
+        );
     }
 
-    public function tasks()
+    
+
+    /**
+     * Project phases.
+     */
+    public function phases()
     {
-        return $this->hasManyThrough(Task::class, Phase::class, 'project_id', 'phase_id', 'project_id', 'phase_id');
+        return $this->hasMany(
+            Phase::class,
+            'project_id',
+            'project_id'
+        )->orderBy('sequence_order');
     }
 
-    // current phase = first phase not yet "Done"/"Closed", falls back to last phase
-    public function currentPhaseIndex(): int
+    /**
+     * Project expenses.
+     */
+    public function expenses()
     {
-        $phases = $this->phases()->pluck('status')->values();
-        foreach ($phases as $i => $status) {
-            if (!in_array($status, ['Done', 'Closed', 'Completed'])) {
-                return $i;
-            }
+        return $this->hasMany(
+            ProjectExpense::class,
+            'project_id',
+            'project_id'
+        )->latest('expense_date');
+    }
+
+    /**
+     * Project deliverables.
+     */
+    public function deliverables()
+    {
+        return $this->hasMany(
+            ProjectDeliverable::class,
+            'project_id',
+            'project_id'
+        );
+    }
+
+    /**
+     * Project change requests.
+     */
+    public function changeRequests()
+    {
+        return $this->hasMany(
+            ChangeRequest::class,
+            'project_id',
+            'project_id'
+        );
+    }
+
+    /**
+     * Project member roles.
+     */
+    public function memberRoles()
+    {
+        return $this->hasMany(
+            ProjectMemberRole::class,
+            'project_id',
+            'project_id'
+        );
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Authorization Helpers
+    |--------------------------------------------------------------------------
+    */
+
+    /**
+     * Determine whether the given user manages this project.
+     *
+     * The ICT Director / system administrator can manage
+     * all projects, while a team's leader manages projects
+     * belonging to their team.
+     */
+    public function isManagedBy($user): bool
+    {
+        if (!$user) {
+            return false;
         }
-        return max(0, $phases->count() - 1);
-    }
 
-    /**
-     * True if the user can manage this project's tasks/assignments —
-     * either they lead the project's team, or they hold a directorate-wide
-     * management role (ICT Director / System Administrator).
-     */
-    /**
-     * Blanket "manages this project" access is Director-scoped, not
-     * Director-or-Admin — an Administrator only gets project authority if
-     * a Director explicitly grants edit_projects/delete_projects to their
-     * role from Roles & Access. This is checked alongside a permission gate
-     * in the controller, not instead of one.
-     */
-    public function isManagedBy(User $user): bool
-    {
-        if ($user->hasRole('ICT Director')) {
+        if ($user->isDirectorOrAdmin()) {
             return true;
         }
 
         return optional($this->team)->team_leader_id === $user->user_id;
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Phase Helpers
+    |--------------------------------------------------------------------------
+    */
+
+    /**
+     * Return the index of the currently active phase.
+     */
+    public function currentPhaseIndex(): int
+    {
+        $phases = $this->phases()
+            ->pluck('status')
+            ->values();
+
+        foreach ($phases as $i => $status) {
+            if (!in_array(
+                $status,
+                ['Done', 'Closed', 'Completed'],
+                true
+            )) {
+                return $i;
+            }
+        }
+
+        return max(0, $phases->count() - 1);
     }
 }
